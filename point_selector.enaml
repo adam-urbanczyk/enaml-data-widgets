@@ -1,0 +1,115 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Aug 28 16:04:53 2015
+
+@author: adam
+"""
+
+from enaml.qt import QtCore, QtGui
+from enaml.widgets.api import *
+from enaml.layout.api import horizontal
+
+import pyqtgraph as pg
+
+import pyqtgraph.opengl as gl
+
+from enaml.core.declarative import d_
+from atom.api import Event, observe, List,Instance
+
+from pylab import *
+
+class PointSelector(RawWidget):
+    '''
+
+    '''
+    
+    x = d_(List())
+    y = d_(List())
+    selected  = d_(List())
+
+    plot = Instance(pg.ScatterPlotItem)
+    
+    def clicked(self,plot,points):
+        '''
+        
+        '''
+               
+        from pdb import set_trace
+        
+        for p in points:
+            if self.selected[p.data()]:
+                p.setBrush('w')
+                self.selected[p.data()] = False
+            else:
+                p.setBrush('b')
+                self.selected[p.data()] = True
+
+    def create_widget(self, parent):
+        ''' 
+        Create the toolkit widget for the control.
+
+        This method should create and initialize the widget.
+
+        Parameters
+        ----------
+        parent : toolkit widget or None
+            The parent toolkit widget for the control.
+
+        Returns
+        -------
+        result : toolkit widget
+            The toolkit specific widget for the control.
+
+        '''
+        
+        #create the widget
+        w = pg.GraphicsLayoutWidget(parent)
+        
+        p = w.addViewBox()
+        
+        self.plot = pg.ScatterPlotItem()
+        self.plot.setData(x=self.x,y=self.y,data=range(len(self.x)),size=50,brush='w',symbol='s')
+        
+        p.addItem(self.plot)
+        self.plot.sigClicked.connect(self.clicked)
+
+        w.setMinimumSize(600, 600)
+        
+        return w
+    
+    @observe('x','y')
+    def update_data(self,*args):
+        '''
+        Updates the plot when data change
+        '''
+        self.plot.setData(x=self.x,y=self.y,data=range(len(self.x)),size=50,brush='w',symbol='s')
+    
+    @observe('selected')
+    def update_selection(self,*args):
+        '''
+        Updates the plot when selection changes
+        '''
+        brush = ['b' if s else 'w' for s in self.selected]
+        self.plot.setBrush(brush,mask=None)
+
+enamldef Main(MainWindow):
+    attr model
+    Container:
+
+        PointSelector: plot:
+            x = rand(10).tolist()
+            y = rand(10).tolist()
+            selected = [False]*len(x)
+            
+        Container:
+            constraints = [
+            horizontal(SelectAll,DeselectAll),
+            ]
+            PushButton: SelectAll:
+                text = 'All'
+                clicked::
+                    plot.selected = [True]*len(plot.x)
+            PushButton: DeselectAll:
+                text = 'None'
+                clicked::
+                    plot.selected = [False]*len(plot.x)
