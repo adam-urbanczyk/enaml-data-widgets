@@ -7,7 +7,7 @@ Created on Fri Aug 28 16:04:53 2015
 
 from enaml.qt import QtCore, QtGui
 from enaml.widgets.api import *
-from enaml.layout.api import horizontal
+from enaml.layout.api import hbox
 
 import pyqtgraph as pg
 
@@ -73,7 +73,7 @@ class PointSelector(RawWidget):
         p.addItem(self.plot)
         self.plot.sigClicked.connect(self.clicked)
 
-        w.setMinimumSize(600, 600)
+        w.setMinimumSize(300, 300)
         
         return w
     
@@ -95,7 +95,6 @@ class PointSelector(RawWidget):
 enamldef Main(MainWindow):
     attr model
     Container:
-
         PointSelector: plot:
             x = rand(10).tolist()
             y = rand(10).tolist()
@@ -103,7 +102,8 @@ enamldef Main(MainWindow):
             
         Container:
             constraints = [
-            horizontal(SelectAll,DeselectAll),
+            hbox(SelectAll,DeselectAll),
+            SelectAll.width == DeselectAll.width
             ]
             PushButton: SelectAll:
                 text = 'All'
